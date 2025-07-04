@@ -12,17 +12,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def create_orb_detector(nfeatures=2000):
+def create_orb_detector(nfeatures=2000): # Creating an ORB detector object
     return cv2.ORB_create(nfeatures=nfeatures)
 
-def detect_and_compute(image, detector):
+def detect_keypoint_compute_descriptor(image, detector): # Computing feature descriptors for the frame
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     kp = detector.detect(gray, None)
     kp, des = detector.compute(gray, kp)
     return kp, des
 
-def match_descriptors(des1, des2, ratio=0.75):
+def match_descriptors(des1, des2, ratio=0.75): # Matching unique descriptors between two frames
 
     if des1 is None or des2 is None or len(des1) < 2 or len(des2) < 2:
         return []
@@ -38,7 +38,7 @@ def match_descriptors(des1, des2, ratio=0.75):
     return good
 
 
-def compute_similarity_score(img_1, img_2, orb_detector=None):
+def compute_similarity_score(img_1, img_2, orb_detector=None): # Calculating the frame similarity score between two frames
 
     if orb_detector is None:
         orb_detector = create_orb_detector(nfeatures=2000)
@@ -48,8 +48,8 @@ def compute_similarity_score(img_1, img_2, orb_detector=None):
     gray_2 = cv2.cvtColor(img_2, cv2.COLOR_BGR2GRAY)
 
     
-    kp1_full, des1_full = detect_and_compute(gray_1, orb_detector)
-    kp2_full, des2_full = detect_and_compute(gray_2, orb_detector)
+    kp1_full, des1_full = detect_keypoint_compute_descriptor(gray_1, orb_detector)
+    kp2_full, des2_full = detect_keypoint_compute_descriptor(gray_2, orb_detector)
     
     h, w = gray_1.shape[:2]
     centerA = gray_1[h//4:3*h//4, w//4:3*w//4]
@@ -57,8 +57,8 @@ def compute_similarity_score(img_1, img_2, orb_detector=None):
     h, w = gray_2.shape[:2]
     centerB = gray_2[h//4:3*h//4, w//4:3*w//4]
     
-    kp1_center, des1_center = detect_and_compute(centerA, orb_detector)
-    kp2_center, des2_center = detect_and_compute(centerB, orb_detector)
+    kp1_center, des1_center = detect_keypoint_compute_descriptor(centerA, orb_detector)
+    kp2_center, des2_center = detect_keypoint_compute_descriptor(centerB, orb_detector)
     
     score_full = 0
     good_matches_full = match_descriptors(des1_full, des2_full, ratio=0.75)
@@ -72,7 +72,7 @@ def compute_similarity_score(img_1, img_2, orb_detector=None):
     
     return score
 
-def detect_object_yolo(frame, detections_folder, frame_file, conf=0.5):
+def detect_object_yolo(frame, detections_folder, frame_file, conf=0.5): # Getting the YOLO detection for that frame
 
     frame_base = os.path.splitext(os.path.basename(frame_file))[0]
     
@@ -115,12 +115,12 @@ def detect_object_yolo(frame, detections_folder, frame_file, conf=0.5):
     
     return (*best_box, best_conf, best_class_id)
 
-def template_matching_tracker(prev_frame, curr_frame, prev_bbox, search_margin=20):
+def template_matching_tracker(prev_frame, curr_frame, prev_bbox, search_margin=20): # Calulating template matching to track the polyp from one frame to another
 
     x, y, w, h = map(int, prev_bbox)
     
     if x < 0 or y < 0 or w <= 0 or h <= 0 or x + w >= prev_frame.shape[1] or y + h >= prev_frame.shape[0]:
-        print("Invalid bounding box for frame shape")
+        print("Invalid bounding box for the shape of the frame")
         return None
     
     template = prev_frame[y:y+h, x:x+w]
@@ -155,7 +155,7 @@ def template_matching_tracker(prev_frame, curr_frame, prev_bbox, search_margin=2
     
     
     if max_val < 0.5:
-        print("Template matching confidence score too low")
+        print("Template matching confidence score was too low")
         return None
     
     
@@ -167,7 +167,7 @@ def template_matching_tracker(prev_frame, curr_frame, prev_bbox, search_margin=2
     
 
     
-def adaptive_search_margin(frame_distance):
+def adaptive_search_margin(frame_distance): # Calculating the search margin for the tracking bounding box depending on the frame distance between the YOLO detected frame and current frame
 
     
     if frame_distance == 1:
@@ -177,7 +177,7 @@ def adaptive_search_margin(frame_distance):
     else:
         return 40
 
-def compare_bounding_box_contents(img1, img2, bbox1, bbox2, min_size=10):
+def compare_bounding_box_contents(img1, img2, bbox1, bbox2, min_size=10): # Calculating the pixel similairty score between the YOLO detected frame and the tracked frame
     
     x1, y1, w1, h1 = map(int, bbox1)
     x2, y2, w2, h2 = map(int, bbox2)
@@ -225,14 +225,14 @@ def compare_bounding_box_contents(img1, img2, bbox1, bbox2, min_size=10):
     return similarity
     
 
-def extract_patient_id(filename):
+def extract_patient_id(filename): # Getting the patient id
     
     match = re.search(r'((?:PF|HF)\d+)', filename)
     if match:
         return match.group(1)
     return None
 
-def get_frames_by_patient(frames_folder):
+def get_frames_by_patient(frames_folder): # Getting the frames for each patient
 
     valid_exts = (".jpg", ".jpeg", ".png", ".bmp")
     frame_files = sorted([
@@ -249,7 +249,7 @@ def get_frames_by_patient(frames_folder):
     
     return patient_frames
 
-def bbox_to_yolo_format(bbox, img_shape, class_id=0):
+def bbox_to_yolo_format(bbox, img_shape, class_id=0): # Converting the output tracking detections to yolo format 
 
     x, y, w, h = bbox[:4]
     confidence = bbox[4] if len(bbox) > 4 else 1.0
@@ -282,7 +282,7 @@ def process_patient(
     max_tracking_frames=5,
     similarity_threshold=25,
     pixel_similarity_threshold=0.5
-):
+):                                         # Pipeline function that calls all the functions performing the temporal tracking for each individual patient
 
 
         
@@ -496,7 +496,7 @@ def process_all_patients(
     max_tracking_frames=5,
     similarity_threshold=25,
     pixel_similarity_threshold=0.5
-):
+):                                   # Main function that calls process_patient for all patients and generates the total outputs
     
     
     processing_start_time = datetime.now()

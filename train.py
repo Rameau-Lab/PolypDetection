@@ -4,8 +4,10 @@ import torch
 from ultralytics import YOLO
 
 
-model = YOLO('yolo12x.pt')
+model = YOLO('yolo12x.pt') # Specifying the YOLO model
 
+
+# Training the YOLO model and specifying all the hyperparameters
 
 train_results = model.train(
     data='Path to the YOLO yaml file',
@@ -40,6 +42,7 @@ train_results = model.train(
     amp=True
 )   
 
+# Performing YOLO detections on the test set using the trained model and outputting the detection files
 
 test_results = model.val(
     data='Path to the YOLO yaml file',

@@ -574,8 +574,14 @@ def process_all_patients(
     
     return overall_stats
 
+# Specify the ground truth paths and the thresholds 
+# confidence_thresh: Minimum confidence threshold for the YOLO detection to be considered valid
+# max_tracking_frames: The maximum number of consective frames the YOLO detection can be tracked to
+# similarity_threshold: The threshold for determing whether two frames are similar enough to proceed with tracking
+# pixel_similarity_threshold: Threshold to check if the tracked polyp is similar enough to the seed YOLO detected polyp (where the tracking originated from)
+
 def main():
-    frames_folder = "Path to the frames"  
+    frames_folder = "Path to the test frames folder"  
     detections_folder = "Path to the yolo detection prediction text files"  
     output_folder = "Path to the detection output text files"  
 

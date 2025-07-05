@@ -10,7 +10,7 @@ main.py => Taking the YOLO test detections and applying temporal tracking on the
 
     - Filenames in the format of HF|PF_patientid_framenumber.jpg, for example, HF002_tensor(337).jpg or PF002_tensor(337).jpg
 
-      - PF or HF => specifiying whether the frames contains a polyp or not
+      - PF or HF => depending on whether the frame contains a polyp or not
         
     
 
